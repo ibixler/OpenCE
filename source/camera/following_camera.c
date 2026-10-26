@@ -42,6 +42,7 @@ symbols in this file:
 
 #include "following_camera.h"
 #include "passenger_camera.h" /* port: port/linux/game/passenger_camera.c */
+#include "third_person_camera.h" /* port: port/linux/game/third_person_camera.c */
 #include "cseries/errors.h" /* port: (error, for a short camera track) */
 #include "observer.h"
 
@@ -197,12 +198,14 @@ void following_camera_update(
 	struct player_control_unit_camera_info camera_info;
 	struct camera_command *command;
 	boolean passenger; /* port: only this local display view borrows a seat's camera */
+	boolean third_person; /* port: the local view on foot (third_person_camera.c) */
 
 	match_assert("c:\\halo\\SOURCE\\camera\\following_camera.c", 138, camera);
 	match_assert("c:\\halo\\SOURCE\\camera\\following_camera.c", 139, result);
 
 	player_control_get_unit_camera_info(controls->local_player_index, &camera_info);
 	passenger = passenger_camera_info(controls->local_player_index, &camera_info);
+	third_person = !passenger && third_person_camera_enabled(controls->local_player_index);
 	command = &result->command;
 
 	command->position = camera_info.position;
@@ -237,7 +240,9 @@ void following_camera_update(
 			camera->crouched = crouched;
 		}
 
-		if (controls->active && !passenger) /* port: no free orbit outside the passenger's firing arc */
+		/* port: no free orbit outside the passenger's firing arc, nor away
+		from the aim on foot */
+		if (controls->active && !passenger && !third_person)
 		{
 			camera->facing_offset.yaw += controls->facing_delta.yaw;
 			camera->facing_offset.pitch += controls->facing_delta.pitch;
@@ -278,6 +283,22 @@ void following_camera_update(
 		command->depth = MAX(
 			(command->depth - 0.6f) * camera->distance_scale + 0.6f,
 			0.6f);
+		/* port: over the shoulder, at the setting's distance */
+		if (third_person)
+		{
+			real_vector3d shoulder;
+			real distance_scale = third_person_camera_distance_scale();
+
+			third_person_camera_shoulder(
+				camera_info.unit_index,
+				&camera_info.position,
+				&command->forward,
+				&shoulder);
+			command->offset.i *= distance_scale;
+			command->offset.j = command->offset.j * distance_scale + shoulder.j;
+			command->offset.k = command->offset.k * distance_scale + shoulder.k;
+			command->depth = MAX(command->depth * distance_scale, 0.6f);
+		}
 
 		object_get_velocities(camera_info.unit_index, &command->velocity, NULL);
 		SET_FLAG(command->flags, 0, TRUE);

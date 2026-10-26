@@ -127,6 +127,7 @@ symbols in this file:
 #include "flying_camera.h"
 #include "following_camera.h"
 #include "passenger_camera.h" /* port: port/linux/game/passenger_camera.c */
+#include "third_person_camera.h" /* port: port/linux/game/third_person_camera.c */
 #include "observer.h"
 #include "orbiting_camera.h"
 
@@ -618,7 +619,13 @@ static void director_choose_game_perspective(
 {
 	/* port: remember only local display choices, never a shared seat flag */
 	static boolean passenger_views[MAXIMUM_NUMBER_OF_LOCAL_PLAYERS];
+	static boolean third_person_views[MAXIMUM_NUMBER_OF_LOCAL_PLAYERS];
 	boolean passenger = passenger_camera_enabled(local_player_index);
+	/* port: the local view on foot (third_person_camera.c); a weapon's zoom
+	changes to and from it at once, without the camera's transition */
+	boolean third_person = third_person_camera_enabled(local_player_index);
+	boolean third_person_snap = third_person != third_person_views[local_player_index] &&
+		third_person_camera_wanted(local_player_index) && !force;
 	director_perspective perspective;
 	short following;
 	long unit_index;
@@ -629,10 +636,11 @@ static void director_choose_game_perspective(
 	/* port: the local passenger view must not change the deterministic
 	camera used by player_aim_projectile. Reconsider a menu toggle even
 	when the seat's enter/exit state has not changed. */
-	if (passenger)
+	if (passenger || third_person)
 		following = TRUE;
 	if (force || director->seat_state != perspective ||
-		passenger != passenger_views[local_player_index])
+		passenger != passenger_views[local_player_index] ||
+		third_person != third_person_views[local_player_index])
 	{
 		if (following == TRUE)
 		{
@@ -642,7 +650,7 @@ static void director_choose_game_perspective(
 				director_set_camera(
 					local_player_index,
 					(director_camera_update_proc)following_camera_update,
-					!force);
+					!force && !third_person_snap);
 			}
 		}
 		else if (force || director->camera_proc == (director_camera_update_proc)following_camera_update)
@@ -651,7 +659,7 @@ static void director_choose_game_perspective(
 			director_set_camera(
 				local_player_index,
 				(director_camera_update_proc)first_person_camera_update,
-				!force);
+				!force && !third_person_snap);
 		}
 
 		director->seat_state = perspective;
@@ -659,6 +667,7 @@ static void director_choose_game_perspective(
 
 	/* port: a menu toggle can change the view without changing seats */
 	passenger_views[local_player_index] = passenger;
+	third_person_views[local_player_index] = third_person;
 	return;
 }
 
@@ -720,7 +729,11 @@ static void director_choose_camera_game(
 		/* (port: not a client in another's game, the host's rules: a flying
 		camera would see all of it, and one behind the player round its
 		corners) */
-		if (key && !network_game_distributed_client())
+		/* port: with display.third_person, the key toggles the view on foot
+		for every player, a client too, in place of the debug cameras */
+		if (key && third_person_camera_setting())
+			third_person_camera_toggle(local_player_index);
+		else if (key && !network_game_distributed_client())
 			director_rotate_cameras(local_player_index, director_game_camera_modes, 3);
 		if (!*director_camera_scripted)
 		{
@@ -892,8 +905,10 @@ static boolean director_update_controls(
 		struct mouse_state const *mouse = input_get_mouse_state();
 
 		switch_camera = input_key_is_down(_key_backspace) == TRUE;
-		/* port: the passenger follows their aim, never the debug mouse orbit */
-		if (!passenger_camera_enabled(local_player_index) && ((director->camera_proc !=
+		/* port: the passenger and the view on foot follow their aim, never
+		the debug mouse orbit */
+		if (!passenger_camera_enabled(local_player_index) &&
+			!third_person_camera_enabled(local_player_index) && ((director->camera_proc !=
 				(director_camera_update_proc)first_person_camera_update &&
 			mouse->buttons[1]) || input_key_is_down(_key_tab)))
 		{

@@ -9,6 +9,7 @@ and the deterministic camera used for shooting keeps its original view.
 
 #include "cseries.h"
 #include "passenger_camera.h"
+#include "third_person_camera.h"
 #include "camera/director.h"
 #include "cutscene/cinematics.h"
 #include "game/game_engine.h"
@@ -142,7 +143,9 @@ boolean passenger_camera_reticle_begin(short local_player_index, long weapon_ind
 	struct collision_result collision;
 
 	reticle_active = FALSE;
-	if (!passenger_camera_enabled(local_player_index) ||
+	/* (the view on foot, third_person_camera.c, moves its reticle too) */
+	if ((!passenger_camera_enabled(local_player_index) &&
+			!third_person_camera_enabled(local_player_index)) ||
 		director_get_perspective(local_player_index) != _director_perspective_third_person)
 		return TRUE;
 	unit_index = player_control_get_unit_index(local_player_index);

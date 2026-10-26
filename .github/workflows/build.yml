@@ -46,6 +46,8 @@ env:
 
 jobs:
   linux:
+    # fork (third-person): web only; the native builds are not built
+    if: false
     # Arch Linux has what the build needs as packages: clang 22 (for the
     # profile-guided optimisation in pgo/), and CMake, pkg-config and
     # wayland-scanner for the SDL 3 that the portable build brings. The build
@@ -113,6 +115,8 @@ jobs:
           retention-days: 3
 
   android:
+    # fork (third-person): web only; the native builds are not built
+    if: false
     # The runner image has the Android SDK and NDK, a JDK and CMake.
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -198,6 +202,8 @@ jobs:
           retention-days: 3
 
   windows:
+    # fork (third-person): web only; the native builds are not built
+    if: false
     # The runner image has LLVM, Python and Visual Studio's x86 libraries and
     # Windows SDK.
     runs-on: windows-2025
@@ -330,8 +336,6 @@ jobs:
           "$RUNNER_TEMP/playwright/node_modules/.bin/playwright" install --with-deps chromium firefox
           NODE_PATH="$RUNNER_TEMP/playwright/node_modules" node port/web/tests/smoke.mjs dist/halo-web-release
           NODE_PATH="$RUNNER_TEMP/playwright/node_modules" node port/web/tests/rooms.mjs dist/halo-web-release
-          # (the native builds' WebRTC, port/linux/src/p2p_webrtc.c, with both)
-          NODE_PATH="$RUNNER_TEMP/playwright/node_modules" node port/web/tests/webrtc_native.mjs chromium firefox
 
       - name: Compile cache
         run: ccache --show-stats
@@ -351,6 +355,8 @@ jobs:
           retention-days: 3
 
   release:
+    # fork (third-person): web only; the native builds are not built
+    if: false
     # The eight builds (and the Windows builds' PDBs) as a release, tagged
     # build-<run number> and marked latest
     # (every file keeps its name from release to release, for the README's
@@ -360,7 +366,6 @@ jobs:
     # but the newest five build-* releases go, tags and all. Only for main,
     # and only when every platform built.
     needs: [linux, android, windows, web]
-    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -469,7 +474,8 @@ jobs:
     # main, only once every platform built and the release is out (the site
     # and the release are one build), and a deployment is never cancelled
     # halfway. The repository's Pages source must be GitHub Actions.
-    needs: [release]
+    # fork (third-person): straight from the web job, not the release
+    needs: [web]
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -538,12 +544,13 @@ jobs:
         uses: actions/deploy-pages@v4
 
   notify:
+    # fork (third-person): web only; the native builds are not built
+    if: false
     # A Discord embed for the run, to the DISCORD_WEBHOOK secret (nothing
     # without it): green when every platform built, red when one did not,
     # with each platform's result, this run's release (main only), and links
     # to the latest release's builds and the site.
     needs: [linux, android, windows, web, release, pages]
-    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

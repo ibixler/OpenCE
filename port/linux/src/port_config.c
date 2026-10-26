@@ -146,6 +146,20 @@ static const struct config_setting config_settings[] =
 		"Off, they are not drawn; firing, animation, sound and lights go on." },
 	{ "display.passenger_third_person", _config_boolean, "false", "HALO_PASSENGER_THIRD_PERSON", _environment_value, _platform_all,
 		"Third-person Warthog and Scorpion passengers. Weapon zoom is disabled." },
+	{ "display.third_person", _config_boolean, "false", "HALO_THIRD_PERSON", _environment_value, _platform_all,
+		"An over-the-shoulder view on foot, local view only. Backspace (or the\n"
+		"gamepad's Black button, held) toggles it; a weapon's zoom returns to\n"
+		"first person. Shots and aim assist keep the first-person aim, and the\n"
+		"reticle shows where it lands." },
+	{ "display.third_person_side", _config_real, "0.35", "HALO_THIRD_PERSON_SIDE", _environment_value, _platform_all,
+		"The view on foot's shoulder: world units to the right (-1 to 1; less\n"
+		"than 0 is the left shoulder, 0 centred)." },
+	{ "display.third_person_up", _config_real, "0.05", "HALO_THIRD_PERSON_UP", _environment_value, _platform_all,
+		"The view on foot's height above the camera track, in world units\n"
+		"(-0.5 to 0.5)." },
+	{ "display.third_person_distance", _config_real, "1.0", "HALO_THIRD_PERSON_DISTANCE", _environment_value, _platform_all,
+		"The view on foot's distance, as a scale of the biped's camera track\n"
+		"(0.25 to 3)." },
 	{ "display.high_res_hud", _config_boolean, "true", "HALO_HIGH_RES_HUD", _environment_value, _platform_all,
 		"Draw the HUD (meters, counters, panels, motion sensor, reticles,\n"
 		"waypoints, scopes) from the high-res assets (8x the maps' bitmaps);\n"
