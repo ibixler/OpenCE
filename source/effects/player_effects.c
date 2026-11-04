@@ -109,6 +109,7 @@ symbols in this file:
 
 #include <stddef.h>
 #include "network_coop.h" /* port: port/linux/game/network_coop.c */
+#include "third_person_camera.h" /* port: port/linux/game/third_person_camera.c */
 
 /* ---------- constants */
 
@@ -1250,12 +1251,17 @@ void player_effect_start(
 		struct damage_effect_definition *definition =
 			damage_effect_definition_get(damage->definition_index);
 		struct player_effect_datum *effect = player_effect_get(local_player_index);
+		/* port: the hit's flash dimmed (display.damage_flash) */
+		struct screen_flash_definition screen_flash = definition->screen_flash;
+		real flash_scale = third_person_camera_damage_flash_scale();
 
+		screen_flash.zero_scale_factor *= flash_scale;
+		screen_flash.max_intensity *= flash_scale;
 		player_effect_update_screen_flash(
 			local_player_index,
 			effect,
-			&definition->screen_flash,
-			scale,
+			&screen_flash,
+			scale * flash_scale,
 			1.0f);
 		player_effect_update_camera_impulse(
 			local_player_index,

@@ -33,6 +33,7 @@ static struct
 	real side;
 	real up;
 	real distance;
+	real damage_flash;
 } settings;
 
 static void read_settings(void)
@@ -47,12 +48,19 @@ static void read_settings(void)
 	settings.side = (real)PIN(config_real("display.third_person_side"), -1.0, 1.0);
 	settings.up = (real)PIN(config_real("display.third_person_up"), -0.5, 0.5);
 	settings.distance = (real)PIN(config_real("display.third_person_distance"), 0.25, 3.0);
+	settings.damage_flash = (real)PIN(config_real("display.damage_flash"), 0.0, 1.0);
 }
 
 boolean third_person_camera_setting(void)
 {
 	read_settings();
 	return settings.enabled;
+}
+
+real third_person_camera_damage_flash_scale(void)
+{
+	read_settings();
+	return settings.damage_flash;
 }
 
 void third_person_camera_toggle(short local_player_index)

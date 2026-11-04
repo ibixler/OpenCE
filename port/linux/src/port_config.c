@@ -160,6 +160,9 @@ static const struct config_setting config_settings[] =
 	{ "display.third_person_distance", _config_real, "1.0", "HALO_THIRD_PERSON_DISTANCE", _environment_value, _platform_all,
 		"The view on foot's distance, as a scale of the biped's camera track\n"
 		"(0.25 to 3)." },
+	{ "display.damage_flash", _config_real, "0.25", "HALO_DAMAGE_FLASH", _environment_value, _platform_all,
+		"How bright the screen flashes when you are hit, as a scale of the\n"
+		"damage's own flash (0 to 1; 0 none, 1 the game's)." },
 	{ "display.high_res_hud", _config_boolean, "true", "HALO_HIGH_RES_HUD", _environment_value, _platform_all,
 		"Draw the HUD (meters, counters, panels, motion sensor, reticles,\n"
 		"waypoints, scopes) from the high-res assets (8x the maps' bitmaps);\n"

@@ -5,6 +5,8 @@
 #include "math/real_math.h"
 
 boolean third_person_camera_setting(void);
+/* how bright the screen flashes when the local player is hit (display.damage_flash) */
+real third_person_camera_damage_flash_scale(void);
 void third_person_camera_toggle(short local_player_index);
 /* on foot, alive, the setting on and not toggled off; zoom not considered */
 boolean third_person_camera_wanted(short local_player_index);
